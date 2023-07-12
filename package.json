@@ -1,0 +1,11 @@
+{
+  "name": "blog_upload_app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "mammoth": "^1.6.0"
+  }
+}
