@@ -1,24 +1,46 @@
-const mammoth = require('mammoth');
+var mammoth = require('mammoth');
 var fr = require('fs');
+const express = require('express');
+const app = express();
+var file_up = require('express-fileupload');
+var path = require('path');
 
-var options:object = {
-    convertImage: mammoth.images.imgElement(function(image) {
-        return image.readAsBuffer().then(function(imageBuffer){
-            fr.writeFileSync('./new_test1.jpg', imageBuffer);
+var options = {
+    convertImage: mammoth.images.imgElement(function (image) {
+        return image.readAsBuffer().then(function (imageBuffer) {
+
+            //stored as number of miliseconds since jan 1 1970 at 00:00:00
+            let img_path = "./" + (new Date()).getTime().toString() + ".jpg";
+
+            fr.writeFileSync(img_path, imageBuffer);
             return {
-                src: "/new_test1.jpg",
+                src: img_path,
                 class: "img-fluid"
             };
         });
     })
 };
 
-mammoth.convertToHtml({path: "test.docx"}, options)
-.then(function(result){
-    var html = result.value; // The generated HTML
-    var messages = result.messages; // Any messages, such as warnings during conversion
-    console.log(typeof messages)
-})
-.catch(function(error) {
-    console.error(error);
+
+app.post('/', file_up(), function (req, res) {
+
+    if(req.files == null || req.files.file.name.length < 5 || req.files.file.name.substring(req.files.file.name.length - 5, req.files.file.name.length) != ".docx"){
+        console.log("ERROR");//log it in log file
+
+        //respond with error
+        res.sendFile(__dirname + "/public/fail.html")
+        
+    }
+    else{
+        // console.log(req.files)
+        fr.writeFileSync("./uploadtest.docx", req.files.file.data)
+
+        res.sendFile(__dirname + "/public/pass.html")
+    }
 });
+
+app.get('/', (req, res)=>{
+    res.sendFile(__dirname + "/public/index.html");
+});
+
+app.listen(3000, function () { return console.log("listening..."); });
