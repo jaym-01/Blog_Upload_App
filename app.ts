@@ -7,55 +7,12 @@ var path = require('path');
 
 const mul = require('multer');
 
-function add_log(type:string, message:string) : void{
-    let log_file = fr.createWriteStream("./server.log", { flags: 'a' });
-    log_file.write((new Date()).toUTCString() + " | Blog Upload | [" + type + "] | " + message + "\n");
-    log_file.end();
-}
+const convert_HTML = require('./project_modules/convert_html')
 
-var options = {
-    convertImage: mammoth.images.imgElement(function (image) {
-        return image.readAsBuffer().then(function (imageBuffer) {
+const logging = require('./project_modules/logging');
 
-            //stored as number of miliseconds since jan 1 1970 at 00:00:00
-            let d = new Date();
-            let img_path = "./" + d.getDate() + d.getMonth() + d.getFullYear() + d.getHours() + d.getMinutes() + d.getSeconds() + d.getMilliseconds() + ".jpg";
-
-            fr.writeFileSync(img_path, imageBuffer);
-            return {
-                src: img_path,
-                class: "img-fluid"
-            };
-        });
-    })
-};
-
-function convertHTML():string{
-    var html:string = "";
-
-    mammoth.convertToHtml({path: "./uploaded_file.docx"}, options)
-    .then(function(result){
-
-        html = result.value;
-        let messages = result.messages;
-
-        if(messages.length > 0){
-
-            messages.forEach(message => {
-                add_log("ERROR", "Generating HTML file: " + message);
-            });
-
-        }
-
-        return html;
-    })
-    .catch(function(error) {
-        add_log("ERROR", error.toString());
-        html = "";
-    });
-
-    return html;
-}
+const add_log = logging.add_log;
+const convertHTML = convert_HTML.convertHTML;
 
 const storage = mul.diskStorage({
     destination: function (req, file, cb) {
@@ -68,10 +25,26 @@ const storage = mul.diskStorage({
 
 app.post('/', mul({storage: storage}).single('file'), function (req, res) {
 
-    var folder_name = req.body.folder_name; 
+    var folder_name:string = req.body.folder_name;
+
+    //folder name validation - ensuring in only has letters and numbers
+    for(let i = 0; i < folder_name.length; i++){
+
+        let ascii = folder_name.charCodeAt(i)
+
+        if(ascii < 48 || (ascii > 57 && ascii < 65) || (ascii > 90 && ascii < 97) || ascii > 122){
+            add_log("ERROR", "File uploaded is not a .docx file or is empty");
+    
+            //respond with error
+            res.sendFile(__dirname + "/public/fail.html")
+            add_log("SUCCESS", "Sent page reporting error with upload to " + req.ip);
+
+            return;
+        }
+    } 
 
     try{
-        if(req.file == null || req.file.originalname.length < 5 || req.file.originalname.substring(req.files.file.name.length - 5, req.files.file.name.length) != ".docx"){
+        if(req.file == null || req.file.originalname.length < 5 || req.file.originalname.substring(req.files.file.name.length - 5, req.files.file.name.length) != ".docx" || folder_name.length < 3 || folder_name.length > 25){
             // console.log("ERROR");//log it in log file
             add_log("ERROR", "File uploaded is not a .docx file or is empty");
     
