@@ -1,5 +1,6 @@
 <html>
     <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
         <style>
             body{
                 font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
@@ -12,18 +13,47 @@
             input{
                 font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
             }
+            input:focus{
+                outline: none;
+            }
         </style>
     </head>
     <body>
+        <script>
+            function check(){
+                var txt = document.getElementById("txt-in").value;
+
+                for(let i = 0; i < txt.length; i++){
+                    let ascii = txt.charCodeAt(i)
+                    if(ascii < 48 || (ascii > 57 && ascii < 65) || (ascii > 90 && ascii < 97) || ascii > 122){
+                        alert("Only use letters and numbers.");
+                        document.getElementById("txt-in").value = "";
+                        return;
+                    }
+                }
+            }
+        </script>
+
         <div>
             <h1>Upload word documents only</h1>
             <form action="/" method="post" encType="multipart/form-data">
+                PROJECT NAME SHOULD ONLY HAVE LETTERS AND NUMBERS
+                <br>
+                NO SPACES OR SYMBOLS
+                <br>
+                <br>
+                <label for="">Enter Project Name:</label>
+                <input id="txt-in" name="folder_name" type="text" autocomplete="off" minlength="3" maxlength="25" onkeyup="check()" required>
+                <br>
+                <br>
                 <label for="in-file">Upload file:</label>
                 <input id="in-file" name="file" type="file" value="Upload file here" accept=".docx">
                 <br>
                 <br>
                 <input type="submit" value="Upload to Blog">
             </form>
+            <br>
+            <br>
             <br>
             <p style="color: red;">FAILED TO SEND FILE</p>
         </div>
