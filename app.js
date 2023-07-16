@@ -6,45 +6,10 @@ var path = require('path');
 var mul = require('multer');
 var convert_HTML = require('./project_modules/convert_html');
 var logging = require('./project_modules/logging');
+var validation = require('./project_modules/validation');
 var add_log = logging.add_log;
 var convertHTML = convert_HTML.convertHTML;
-// function add_log(type:string, message:string) : void{
-//     let log_file = fr.createWriteStream("./server.log", { flags: 'a' });
-//     log_file.write((new Date()).toUTCString() + " | Blog Upload | [" + type + "] | " + message + "\n");
-//     log_file.end();
-// }
-// var options = {
-//     convertImage: mammoth.images.imgElement(function (image) {
-//         return image.readAsBuffer().then(function (imageBuffer) {
-//             //stored as number of miliseconds since jan 1 1970 at 00:00:00
-//             let d = new Date();
-//             let img_path = "./" + d.getDate() + d.getMonth() + d.getFullYear() + d.getHours() + d.getMinutes() + d.getSeconds() + d.getMilliseconds() + ".jpg";
-//             fr.writeFileSync(img_path, imageBuffer);
-//             return {
-//                 src: img_path,
-//                 class: "img-fluid"
-//             };
-//         });
-//     })
-// };
-// function convertHTML():string{
-//     var html:string = "";
-//     mammoth.convertToHtml({path: "./uploaded_file.docx"}, options)
-//     .then(function(result){
-//         html = result.value;
-//         let messages = result.messages;
-//         if(messages.length > 0){
-//             messages.forEach(message => {
-//                 add_log("ERROR", "Generating HTML file: " + message);
-//             });
-//         }
-//     })
-//     .catch(function(error) {
-//         add_log("ERROR", error.toString());
-//         html = "";
-//     });
-//     return html;
-// }
+var check = validation.check_n_l;
 var storage = mul.diskStorage({
     destination: function (req, file, cb) {
         cb(null, './externalfile');
@@ -53,8 +18,15 @@ var storage = mul.diskStorage({
         cb(null, 'uploaded_file.docx');
     }
 });
+function senderr(req, res) {
+    add_log("ERROR", "File uploaded is not a .docx file or is empty");
+    //respond with error
+    res.sendFile(__dirname + "/public/fail.html");
+    add_log("SUCCESS", "Sent page reporting error with upload to " + req.ip);
+}
 app.post('/', mul({ storage: storage }).single('file'), function (req, res) {
     var folder_name = req.body.folder_name;
+    check(folder_name, senderr(req, res));
     //folder name validation - ensuring in only has letters and numbers
     for (var i = 0; i < folder_name.length; i++) {
         var ascii = folder_name.charCodeAt(i);
