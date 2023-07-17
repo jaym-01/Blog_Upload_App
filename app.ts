@@ -1,4 +1,3 @@
-var mammoth = require('mammoth');
 var fr = require('fs');
 const express = require('express');
 const app = express();
