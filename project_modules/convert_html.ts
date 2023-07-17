@@ -2,24 +2,24 @@ const mammoth = require('mammoth');
 const logging = require('./logging')
 const fr = require('fs');
 
-var options = {
-    convertImage: mammoth.images.imgElement(function (image) {
-        return image.readAsBuffer().then(function (imageBuffer) {
+function convertHTML(req, res, save_path:string):void{
+    var options = {
+        convertImage: mammoth.images.imgElement(function (image) {
+            return image.readAsBuffer().then(function (imageBuffer) {
+    
+                //stored as number of miliseconds since jan 1 1970 at 00:00:00
+                let d = new Date();
+                let img_path = save_path.substring(1, save_path.length) + "/" + d.getDate() + d.getMonth() + d.getFullYear() + d.getHours() + d.getMinutes() + d.getSeconds() + d.getMilliseconds() + ".jpg";
+    
+                fr.writeFileSync("." + img_path, imageBuffer);
+                return {
+                    src: img_path,
+                    class: "img-fluid"
+                };
+            });
+        })
+    };
 
-            //stored as number of miliseconds since jan 1 1970 at 00:00:00
-            let d = new Date();
-            let img_path = "/SavedHTMLFiles/" + d.getDate() + d.getMonth() + d.getFullYear() + d.getHours() + d.getMinutes() + d.getSeconds() + d.getMilliseconds() + ".jpg";
-
-            fr.writeFileSync("." + img_path, imageBuffer);
-            return {
-                src: img_path,
-                class: "img-fluid"
-            };
-        });
-    })
-};
-
-function convertHTML(req, res):void{
     mammoth.convertToHtml({path: "./externalfile/uploaded_file.docx"}, options)
     .then(function(result){
 
@@ -58,7 +58,7 @@ function convertHTML(req, res):void{
             </div>
         </body>
     </html>`;
-        fr.writeFileSync("./SavedHTMLFiles/blog.html", all_html);
+        fr.writeFileSync(save_path + "/blog.html", all_html);
         logging.add_log("SUCCESS", "Saved HTML file");
 
         //delete the word file

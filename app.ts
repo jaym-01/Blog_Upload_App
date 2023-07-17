@@ -50,7 +50,14 @@ app.post('/', mul({storage: storage}).single('file'), function (req, res) {
             add_log("SUCCESS", "Sent page reporting error with upload to " + req.ip);
         }
         else{
-            var html_code = convertHTML(req, res);
+            var save_path = "./SavedHTMLFiles/" + folder_name;
+
+            if(fr.existsSync(save_path)){
+                fr.rmdirSync(save_path, {recursive: true});
+            }
+            fr.mkdirSync(save_path);
+
+            var html_code = convertHTML(req, res, save_path);
             // add_log("SUCCESS", "Converted .docx file to html");
             add_log("SUCCESS", "called function to create html file");
         }
